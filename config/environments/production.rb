@@ -58,8 +58,7 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Allow requests from the production domain
-  config.hosts << "lili.petnyang.shop"
-  config.hosts << "43.203.111.90" # Adding IP just in case for initial testing
+  config.hosts << "liliplay.petnyang.shop"
 
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "lili.petnyang.shop" }
