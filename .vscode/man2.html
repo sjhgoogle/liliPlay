@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Mouth Detect on Image</title>
+    <style>
+      body {
+        background: #111;
+      }
+      canvas {
+        border: 1px solid #444;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
+    <script>
+      const img = new Image();
+      img.src = "man.jpg";
+
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const faceMesh = new FaceMesh({
+        locateFile: (f) =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`,
+      });
+
+      faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+      });
+
+      img.onload = async () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        await faceMesh.send({ image: img });
+      };
+
+      faceMesh.onResults((res) => {
+        ctx.drawImage(img, 0, 0);
+
+        if (!res.multiFaceLandmarks) return;
+        const lm = res.multiFaceLandmarks[0];
+
+        // 입 중심 (upper lip / lower lip)
+        const u = lm[13];
+        const d = lm[14];
+
+        const x = ((u.x + d.x) / 2) * canvas.width;
+        const y = ((u.y + d.y) / 2) * canvas.height;
+
+        const size = 120;
+
+        // 애니메이션 루프
+        let t = 0;
+        function animate() {
+          ctx.drawImage(img, 0, 0);
+
+          // fake mouth open value
+          const open = (Math.sin(t) + 1) / 2; // 0~1
+          const scale = 0.5 + open * 1.2;
+
+          const mx = x - size / 2;
+          const my = y - size / 2;
+
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(1, scale);
+          ctx.drawImage(
+            img,
+            mx,
+            my,
+            size,
+            size,
+            -size / 2,
+            -size / 2,
+            size,
+            size,
+          );
+          ctx.restore();
+
+          // 디버그 박스
+          ctx.strokeStyle = "red";
+          ctx.strokeRect(mx, my, size, size);
+
+          t += 0.08;
+          requestAnimationFrame(animate);
+        }
+
+        animate();
+      });
+    </script>
+  </body>
+</html>
